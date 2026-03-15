@@ -11,6 +11,7 @@ class AiAnalysisService
 
     public function __construct()
     {
+        // Récupération de la clé via le config pour la stabilité
         $this->apiKey = config('services.gemini.key') ?? '';
     }
 
@@ -25,15 +26,17 @@ class AiAnalysisService
         $prompt = $this->buildPrompt($cvText, $jobTitle, $jobDescription);
 
         try {
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $this->apiKey;
+            // Modèle corrigé en 1.5-flash (le plus stable pour le free tier)
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $this->apiKey;
 
-            $response = Http::timeout(60)
+            // Timeout augmenté à 100s car le prompt est très long à traiter
+            $response = Http::timeout(100)
                 ->withoutVerifying()
                 ->post($url, [
                     'contents' => [['parts' => [['text' => $prompt]]]],
                     'generationConfig' => [
                         'response_mime_type' => 'application/json',
-                        'temperature' => 0.1, // Pour la stabilité maximale
+                        'temperature' => 0.1, // Stabilité maximale des scores
                     ]
                 ]);
 
@@ -43,9 +46,12 @@ class AiAnalysisService
             } else {
                 $text = $response->json('candidates.0.content.parts.0.text', '');
                 $feedback = $this->parseJsonResponse($text);
+                
+                // On s'assure que le résultat est bien wrappé dans 'feedback' pour le Controller
                 $result = $feedback ? ['feedback' => $feedback] : ['error' => 'Invalid JSON from AI.'];
             }
         } catch (\Exception $e) {
+            Log::error('System Error in AiAnalysisService: ' . $e->getMessage());
             $result = ['error' => 'System Error: ' . $e->getMessage()];
         }
 
@@ -109,7 +115,7 @@ class AiAnalysisService
         Tu DOIS retourner UNIQUEMENT ce format JSON pour que l'interface s'affiche correctement :
         {
           \"overallScore\": 0,
-          \"ATS\": { \"score\": 0, \"tips\": [] },
+          \"ATS\": { \"score\": 0, \"tips\": [{\"type\": \"improve\", \"tip\": \"Ajoutez des mots-clés\"}] },
           \"toneAndStyle\": { \"score\": 0, \"tips\": [] },
           \"content\": { \"score\": 0, \"tips\": [] },
           \"structure\": { \"score\": 0, \"tips\": [] },
