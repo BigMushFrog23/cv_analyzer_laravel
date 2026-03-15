@@ -148,13 +148,17 @@ input, textarea, select {
   text-decoration: none;
 }
 
+/* ── Find this section around line 130 ── */
+
 .btn-primary {
   background: linear-gradient(135deg, #7c6bff, #5b4be6);
-  color: #0056b3;
+  color: #ffffff; /* FIXED: Changed from #0056b3 to white for contrast */
   box-shadow: 0 0 20px var(--accent-glow);
 }
+
 .btn-primary:hover {
   background: linear-gradient(135deg, #9080ff, #6b5af0);
+  color: #ffffff; /* Ensure it stays white on hover */
   opacity: 1;
   transform: translateY(-1px);
   box-shadow: 0 4px 28px var(--accent-glow);
