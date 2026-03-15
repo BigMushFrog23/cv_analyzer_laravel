@@ -48,7 +48,7 @@
 </main>
 
 <footer class="footer">
-    <p>© {{ date('Y') }} CVAnalyzer — BTS SIO SLAM — Propulsé par Laravel & Claude AI</p>
+    <p>© {{ date('Y') }} CVAnalyzer — BTS SIO SLAM — Propulsé par Laravel</p>
 </footer>
 
 <script src="{{ asset('js/app.js') }}"></script>
