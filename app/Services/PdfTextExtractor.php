@@ -2,68 +2,63 @@
 
 namespace App\Services;
 
+use Smalot\PdfParser\Parser;
+use Illuminate\Support\Facades\Log;
+
 class PdfTextExtractor
 {
-    /**
-     * Extraire le texte d'un fichier PDF
-     */
     public function extract(string $filePath): string
     {
-        // Méthode 1 : pdftotext (poppler-utils)
-        $text = $this->tryPdfToText($filePath);
-        if ($text && strlen(trim($text)) > 50) {
-            return $this->sanitize($text);
-        }
+        try {
+            if (!file_exists($filePath)) {
+                return '';
+            }
 
-        // Méthode 2 : lecture brute du PDF
-        $text = $this->parseRaw($filePath);
-        return $this->sanitize($text);
+            // Utilisation du parser pro
+            $parser = new Parser();
+            $pdf = $parser->parseFile($filePath);
+            
+            // Extraction globale
+            $text = $pdf->getText();
+
+            // Si getText() est capricieux (arrive sur certains exports Canva complexes)
+            if (strlen(trim($text)) < 50) {
+                $text = "";
+                foreach ($pdf->getPages() as $page) {
+                    $text .= $page->getText() . " ";
+                }
+            }
+
+            return $this->sanitize($text);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur extraction PDF: ' . $e->getMessage());
+            
+            // Fallback sur ta méthode shell si pdftotext est installé sur ton serveur
+            return $this->tryPdfToText($filePath);
+        }
     }
 
     private function tryPdfToText(string $filePath): string
     {
         if (!function_exists('shell_exec')) return '';
         $escaped = escapeshellarg($filePath);
-        // 2>NUL supprime les erreurs sur Windows
+        // Sur Windows c'est souvent pdftotext.exe, sur Linux pdftotext
         $output = @shell_exec("pdftotext {$escaped} - 2>NUL");
-        return $output ?? '';
-    }
-
-    private function parseRaw(string $filePath): string
-    {
-        $content = @file_get_contents($filePath);
-        if (!$content) return '';
-
-        $text = '';
-
-        // Extraire les blocs de texte PDF (entre BT et ET)
-        if (preg_match_all('/BT(.*?)ET/s', $content, $btMatches)) {
-            foreach ($btMatches[1] as $block) {
-                if (preg_match_all('/\(([^)]+)\)/', $block, $strMatches)) {
-                    $text .= implode(' ', $strMatches[1]) . ' ';
-                }
-            }
-        }
-
-        // Fallback : toutes les chaînes entre parenthèses lisibles
-        if (strlen(trim($text)) < 50) {
-            preg_match_all('/\(([^\)]{2,})\)/', $content, $matches);
-            $candidates = array_filter($matches[1], function ($s) {
-                return preg_match('/[a-zA-Z]{2,}/', $s)
-                    && !preg_match('/[\x00-\x08\x0E-\x1F]{2,}/', $s);
-            });
-            $text = implode(' ', $candidates);
-        }
-
-        return preg_replace('/\s+/', ' ', trim($text));
+        return $output ? $this->sanitize($output) : '';
     }
 
     private function sanitize(string $text): string
     {
+        // Nettoyage UTF-8 et caractères spéciaux
         if (!mb_check_encoding($text, 'UTF-8')) {
             $text = mb_convert_encoding($text, 'UTF-8', 'auto');
         }
+        
+        // Supprime les caractères de contrôle et normalise les espaces
         $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $text);
+        $text = preg_replace('/\s+/', ' ', $text);
+        
         return trim($text);
     }
 }
