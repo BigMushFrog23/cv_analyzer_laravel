@@ -9,17 +9,23 @@ use App\Services\PdfTextExtractor;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Using class constants ensures that if you rename a class 
-     * using an IDE, these references update automatically.
+     * Define the services as an array to avoid repeating 
+     * '$this->app->singleton' multiple times.
      */
+    private const APP_SERVICES = [
+        AiAnalysisService::class,
+        PdfTextExtractor::class,
+    ];
+
     public function register(): void
     {
-        $this->app->singleton(AiAnalysisService::class);
-        $this->app->singleton(PdfTextExtractor::class);
+        foreach (self::APP_SERVICES as $service) {
+            $this->app->singleton($service);
+        }
     }
 
     public function boot(): void
     {
-        // Global configuration logic goes here.
+        // Global boot logic
     }
 }

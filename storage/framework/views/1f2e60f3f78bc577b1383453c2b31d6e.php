@@ -48,10 +48,10 @@
 </main>
 
 <footer class="footer">
-    <p>© <?php echo e(date('Y')); ?> CVAnalyzer — BTS SIO SLAM — Propulsé par Laravel & Claude AI</p>
+    <p>© <?php echo e(date('Y')); ?> CVAnalyzer — BTS SIO SLAM — Propulsé par Laravel</p>
 </footer>
 
 <script src="<?php echo e(asset('js/app.js')); ?>"></script>
 </body>
 </html>
-<?php /**PATH C:\xampp\htdocs\laravel\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\xampp\htdocs\cv_analyzer_laravel\resources\views\layouts\app.blade.php ENDPATH**/ ?>
