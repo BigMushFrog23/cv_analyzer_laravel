@@ -99,7 +99,7 @@ class AnalysisController extends Controller
             $errorMessage = "Une erreur technique est survenue.";
         }
 
-        return $errorMessage 
+        return $errorMessage
             ? back()->withErrors(['cv_file' => $errorMessage])
             : redirect()->route('analysis.show', $analysis->id)->with('success', 'Analyse terminée !');
     }

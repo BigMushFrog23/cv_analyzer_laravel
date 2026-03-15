@@ -148,17 +148,18 @@ input, textarea, select {
   text-decoration: none;
 }
 
-/* ── Find this section around line 130 ── */
-
+/* ── Updated Primary Button for High Contrast ── */
 .btn-primary {
   background: linear-gradient(135deg, #7c6bff, #5b4be6);
-  color: #ffffff; /* FIXED: Changed from #0056b3 to white for contrast */
+  color: #ffffff !important; /* Ensure white is forced */
   box-shadow: 0 0 20px var(--accent-glow);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Improves legibility */
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #9080ff, #6b5af0);
-  color: #ffffff; /* Ensure it stays white on hover */
+  /* Darkened the hover gradient slightly from #9080ff to #6d5dfc */
+  background: linear-gradient(135deg, #6d5dfc, #4a3ad4); 
+  color: #ffffff !important;
   opacity: 1;
   transform: translateY(-1px);
   box-shadow: 0 4px 28px var(--accent-glow);
