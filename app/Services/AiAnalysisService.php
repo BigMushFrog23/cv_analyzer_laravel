@@ -14,52 +14,51 @@ class AiAnalysisService
         $this->apiKey = trim(env('GEMINI_API_KEY', ''));
     }
 
-    public function analyze(string $cvText, string $jobTitle, string $jobDescription, int $yearsExp): array
+    public function analyze(string $cvText, string $jobTitle, string $jobDescription): array
     {
+        // Initialize our single source of truth for the return
+        $result = ['error' => 'Unknown error occurred'];
+
+        // 1. Guard Clause (Checking API Key)
         if (empty($this->apiKey)) {
-            return ['error' => 'API Key missing'];
+            return ['error' => 'API Key missing']; // Return #1
         }
 
-        $prompt = $this->buildPrompt($cvText, $jobTitle, $jobDescription, $yearsExp);
+        $prompt = $this->buildPrompt($cvText, $jobTitle, $jobDescription);
 
         try {
-            /**
-             * We use v1beta as per your AI Studio export.
-             * We use 'generateContent' instead of 'streamGenerateContent' for a simple JSON response.
-             */
             $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $this->apiKey;
 
             $response = Http::timeout(60)
-            ->withoutVerifying()
-            ->post($url, [
-                'contents' => [['parts' => [['text' => $prompt]]]],
-                'generationConfig' => [
-                    'response_mime_type' => 'application/json',
-                ]
-            ]);
+                ->withoutVerifying()
+                ->post($url, [
+                    'contents' => [['parts' => [['text' => $prompt]]]],
+                    'generationConfig' => [
+                        'response_mime_type' => 'application/json',
+                    ]
+                ]);
 
             if ($response->failed()) {
                 Log::error('Gemini API Error', ['body' => $response->body()]);
-                return ['error' => 'API Error: ' . ($response->json('error.message') ?? 'Unknown')];
+                $result = ['error' => 'API Error: ' . ($response->json('error.message') ?? 'Unknown')];
+            } else {
+                $text = $response->json('candidates.0.content.parts.0.text', '');
+
+                if (empty($text)) {
+                    $result = ['error' => 'Empty response from AI.'];
+                } else {
+                    $feedback = $this->parseJsonResponse($text);
+                    $result = $feedback ? ['feedback' => $feedback] : ['error' => 'Invalid JSON from AI.'];
+                }
             }
-
-            // In thinking models, the text is still in the same place
-            $text = $response->json('candidates.0.content.parts.0.text', '');
-
-            if (empty($text)) {
-                return ['error' => 'Empty response from AI.'];
-            }
-
-            $feedback = $this->parseJsonResponse($text);
-
-            return $feedback ? ['feedback' => $feedback] : ['error' => 'Invalid JSON from AI.'];
-
         } catch (\Exception $e) {
-            return ['error' => 'System Error: ' . $e->getMessage()];
+            $result = ['error' => 'System Error: ' . $e->getMessage()];
         }
+
+        return $result; // Return #2
     }
 
-    private function buildPrompt(string $cvText, string $jobTitle, string $jobDescription, int $yearsExp): string
+    private function buildPrompt(string $cvText, string $jobTitle, string $jobDescription): string
     {
         return "Tu es un expert RH. Analyse ce CV pour le poste: {$jobTitle}.\n"
             . "IMPORTANT : Retourne UNIQUEMENT un objet JSON. Aucun autre texte.\n\n"

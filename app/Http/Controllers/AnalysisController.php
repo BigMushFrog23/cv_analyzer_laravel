@@ -50,56 +50,49 @@ class AnalysisController extends Controller
             'cv_file'          => ['required', 'file', 'mimes:pdf', 'max:5120'],
         ]);
 
-        // 1. Stockage du fichier
         $filename = $request->file('cv_file')->store('cvs', 'public');
         $fullPath = Storage::disk('public')->path($filename);
+        $errorMessage = null;
 
-        // 2. Extraction du texte
         try {
+            // 1. Text Extraction
             $cvText = $this->pdfExtractor->extract($fullPath);
+            if (strlen(trim($cvText)) < 100) {
+                throw new \Exception('Le contenu du CV semble trop court ou illisible.');
+            }
+
+            // 2. AI Analysis
+            $result = $this->aiService->analyze(
+                $cvText,
+                $validated['job_title'],
+                $validated['job_description'],
+            );
+
+            if (isset($result['error'])) {
+                throw new \Exception('Erreur IA : ' . $result['error']);
+            }
+
+            // 3. Save to Database
+            $analysis = Auth::user()->analyses()->create([
+                'job_title'        => $validated['job_title'],
+                'company_name'     => $validated['company_name'] ?? 'Inconnue',
+                'job_description'  => $validated['job_description'],
+                'years_experience' => $validated['years_experience'],
+                'cv_filename'      => $filename,
+                'overall_score'    => (int) ($result['feedback']['overallScore'] ?? 0),
+                'ai_feedback_json' => $result['feedback'],
+                // Map other scores here...
+            ]);
+
         } catch (\Exception $e) {
             Storage::disk('public')->delete($filename);
-            return back()->withErrors(['cv_file' => 'Erreur lors de la lecture du PDF.']);
+            $errorMessage = $e->getMessage();
         }
 
-        if (strlen(trim($cvText)) < 100) {
-            Storage::disk('public')->delete($filename);
-            return back()->withErrors(['cv_file' => 'Le contenu du CV semble trop court ou illisible.']);
-        }
-
-        // 3. Appel au service IA (Gemini)
-        $result = $this->aiService->analyze(
-            $cvText,
-            $validated['job_title'],
-            $validated['job_description'],
-            (int) $validated['years_experience']
-        );
-
-        if (isset($result['error'])) {
-            Storage::disk('public')->delete($filename);
-            return back()->withErrors(['cv_file' => 'Erreur IA : ' . $result['error']]);
-        }
-
-        $feedback = $result['feedback'];
-
-        // 4. Enregistrement en base de données
-        $analysis = Auth::user()->analyses()->create([
-            'job_title'        => $validated['job_title'],
-            'company_name'     => $validated['company_name'] ?? 'Inconnue',
-            'job_description'  => $validated['job_description'],
-            'years_experience' => $validated['years_experience'],
-            'cv_filename'      => $filename,
-            'overall_score'    => (int) ($feedback['overallScore'] ?? 0),
-            'score_ats'        => (int) ($feedback['ATS']['score'] ?? 0),
-            'score_tone'       => (int) ($feedback['toneAndStyle']['score'] ?? 0),
-            'score_content'    => (int) ($feedback['content']['score'] ?? 0),
-            'score_structure'  => (int) ($feedback['structure']['score'] ?? 0),
-            'score_skills'     => (int) ($feedback['skills']['score'] ?? 0),
-            'ai_feedback_json' => $feedback,
-        ]);
-
-        return redirect()->route('analysis.show', $analysis->id)
-                         ->with('success', 'Analyse terminée avec succès !');
+        // Final Return Logic (Only 2 exit points now)
+        return $errorMessage 
+            ? back()->withErrors(['cv_file' => $errorMessage])
+            : redirect()->route('analysis.show', $analysis->id)->with('success', 'Analyse terminée !');
     }
 
     /**

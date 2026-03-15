@@ -62,8 +62,14 @@ class CvAnalysis extends Model
      */
     public function getScoreColorAttribute(): string
     {
-        if ($this->overall_score >= 75) return 'good';
-        if ($this->overall_score >= 50) return 'warn';
+        if ($this->overall_score >= 75)
+        {
+            return 'good';
+        }
+        if ($this->overall_score >= 50)
+        {
+            return 'warn';
+        }
         return 'bad';
     }
 
@@ -76,7 +82,7 @@ class CvAnalysis extends Model
         {
             return 'Excellent';
         }
-        if ($this->overall_score >= 50) 
+        if ($this->overall_score >= 50)
         {
             return 'Correct';
         }
@@ -88,9 +94,9 @@ class CvAnalysis extends Model
      */
     public static function colorFor(int $score): string
     {
-        if ($score >= 75) 
+        if ($score >= 75)
         {
-            return 'good';   
+            return 'good';
         }
         if ($score >= 50)
         {

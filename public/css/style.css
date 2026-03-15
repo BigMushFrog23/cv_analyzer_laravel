@@ -150,7 +150,7 @@ input, textarea, select {
 
 .btn-primary {
   background: linear-gradient(135deg, #7c6bff, #5b4be6);
-  color: #fff;
+  color: #0056b3;
   box-shadow: 0 0 20px var(--accent-glow);
 }
 .btn-primary:hover {

@@ -9,7 +9,7 @@ use App\Services\PdfTextExtractor;
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Define the services as an array to avoid repeating 
+     * Define the services as an array to avoid repeating
      * '$this->app->singleton' multiple times.
      */
     private const APP_SERVICES = [
