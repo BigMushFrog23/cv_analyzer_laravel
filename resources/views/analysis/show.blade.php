@@ -118,7 +118,7 @@
             <div class="soi-info">
                 <span class="soi-label">{{ $section['label'] }}</span>
                 <span class="soi-score">
-                    {{ $section['score'] }} — 
+                    {{ $section['score'] }} —
                     @if($section['score'] >= 75) Excellent
                     @elseif($section['score'] >= 50) Correct
                     @else À améliorer
