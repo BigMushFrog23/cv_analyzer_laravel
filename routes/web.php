@@ -5,37 +5,28 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnalysisController;
 use App\Http\Controllers\DashboardController;
 
-// ── Page d'accueil ─────────────────────────────────────────
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+// ── Public ──
+Route::view('/', 'home')->name('home');
 
-// ── Authentification (invités seulement) ──────────────────
+// ── Authentification (Guests) ──
 Route::middleware('guest')->group(function () {
-    Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
-
-    Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',    [AuthController::class, 'login']);
+    Route::controller(AuthController::class)->group(function () {
+        Route::get('/register', 'showRegister')->name('register');
+        Route::post('/register', 'register');
+        Route::get('/login', 'showLogin')->name('login');
+        Route::post('/login', 'login');
+    });
 });
 
-// ── Déconnexion ────────────────────────────────────────────
-Route::post('/logout', [AuthController::class, 'logout'])
-    ->name('logout')
-    ->middleware('auth');
-
-// ── Pages protégées (utilisateur connecté) ─────────────────
+// ── Protected (Auth) ──
 Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
+    // 1. Register the resource but EXCLUDE create and store to avoid the name conflict
+    Route::resource('analysis', AnalysisController::class)->except(['index', 'create', 'store']);
 
-    // CRUD Analyses
-    Route::get('/analyze',         [AnalysisController::class, 'create'])->name('analysis.create');
-    Route::post('/analyze',        [AnalysisController::class, 'store'])->name('analysis.store');
-    Route::get('/analysis/{id}',   [AnalysisController::class, 'show'])->name('analysis.show');
-    Route::get('/analysis/{id}/edit',   [AnalysisController::class, 'edit'])->name('analysis.edit');
-    Route::put('/analysis/{id}',   [AnalysisController::class, 'update'])->name('analysis.update');
-    Route::delete('/analysis/{id}',[AnalysisController::class, 'destroy'])->name('analysis.destroy');
+    // 2. Manually define your custom /analyze paths with the names you want
+    Route::get('/analyze', [AnalysisController::class, 'create'])->name('analysis.create');
+    Route::post('/analyze', [AnalysisController::class, 'store'])->name('analysis.store');
 });
