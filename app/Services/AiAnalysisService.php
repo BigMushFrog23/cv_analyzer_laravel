@@ -11,7 +11,8 @@ class AiAnalysisService
 
     public function __construct()
     {
-        $this->apiKey = trim(env('GEMINI_API_KEY', ''));
+        // Use the config helper instead of env()
+        $this->apiKey = config('services.gemini.key');
     }
 
     public function analyze(string $cvText, string $jobTitle, string $jobDescription): array
