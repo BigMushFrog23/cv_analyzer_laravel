@@ -72,8 +72,14 @@ class CvAnalysis extends Model
      */
     public function getScoreLabelAttribute(): string
     {
-        if ($this->overall_score >= 75) return 'Excellent';
-        if ($this->overall_score >= 50) return 'Correct';
+        if ($this->overall_score >= 75)
+        {
+            return 'Excellent';
+        }
+        if ($this->overall_score >= 50) 
+        {
+            return 'Correct';
+        }
         return 'À améliorer';
     }
 
@@ -82,8 +88,14 @@ class CvAnalysis extends Model
      */
     public static function colorFor(int $score): string
     {
-        if ($score >= 75) return 'good';
-        if ($score >= 50) return 'warn';
+        if ($score >= 75) 
+        {
+            return 'good';   
+        }
+        if ($score >= 50)
+        {
+            return 'warn';
+        }
         return 'bad';
     }
 }

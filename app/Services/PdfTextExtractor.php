@@ -41,7 +41,10 @@ class PdfTextExtractor
 
     private function tryPdfToText(string $filePath): string
     {
-        if (!function_exists('shell_exec')) return '';
+        if (!function_exists('shell_exec'))
+        {
+            return '';
+        }
         $escaped = escapeshellarg($filePath);
         // Sur Windows c'est souvent pdftotext.exe, sur Linux pdftotext
         $output = @shell_exec("pdftotext {$escaped} - 2>NUL");
@@ -51,7 +54,8 @@ class PdfTextExtractor
     private function sanitize(string $text): string
     {
         // Nettoyage UTF-8 et caractères spéciaux
-        if (!mb_check_encoding($text, 'UTF-8')) {
+        if (!mb_check_encoding($text, 'UTF-8'))
+        {
             $text = mb_convert_encoding($text, 'UTF-8', 'auto');
         }
         

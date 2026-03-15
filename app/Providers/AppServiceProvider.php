@@ -3,19 +3,23 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\AiAnalysisService;
+use App\Services\PdfTextExtractor;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Using class constants ensures that if you rename a class 
+     * using an IDE, these references update automatically.
+     */
     public function register(): void
     {
-        // Enregistrer les Services dans le conteneur IoC de Laravel
-        // Laravel les injectera automatiquement dans les constructeurs des contrôleurs
-        $this->app->singleton(\App\Services\AiAnalysisService::class);
-        $this->app->singleton(\App\Services\PdfTextExtractor::class);
+        $this->app->singleton(AiAnalysisService::class);
+        $this->app->singleton(PdfTextExtractor::class);
     }
 
     public function boot(): void
     {
-        //
+        // Global configuration logic goes here.
     }
 }

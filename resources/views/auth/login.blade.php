@@ -37,10 +37,10 @@
                        required>
             </div>
 
-            <div class="form-group form-check">
-                <label class="check-label">
-                    <input type="checkbox" name="remember" id="remember">
-                    Se souvenir de moi
+            <div class="form-group form-check" style="margin-top: 15px; margin-bottom: 15px;">
+                <label class="check-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #a0aec0;">
+                    <input type="checkbox" name="remember" style="width: 16px; height: 16px; cursor: pointer; margin: 0;">
+                    <span style="font-size: 14px; line-height: 1;">Se souvenir de moi</span>
                 </label>
             </div>
 
