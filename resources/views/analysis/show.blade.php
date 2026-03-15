@@ -64,9 +64,9 @@
             </p>
         </div>
 
-        @php 
+        @php
             $overall = $feedback['overallScore'] ?? $analysis->overall_score;
-            $dash = round(314 * $overall / 100); 
+            $dash = round(314 * $overall / 100);
         @endphp
         <div class="overall-score-circle {{ \App\Models\CvAnalysis::colorFor($overall) }}">
             <svg viewBox="0 0 120 120">
@@ -93,7 +93,7 @@
     {{-- Scores par catégorie (Barres horizontales) --}}
     <div class="scores-overview">
         @foreach ($sections as $key => $info)
-        @php 
+        @php
             // On prend le score du JSON en priorité, sinon celui de la DB
             $currentScore = $info['data']['score'] ?? $info['db_score'] ?? 0;
             $color = \App\Models\CvAnalysis::colorFor($currentScore);
@@ -119,7 +119,7 @@
     {{-- Sections détaillées (Tips) --}}
     <div class="feedback-sections">
         @foreach ($sections as $key => $info)
-        @php 
+        @php
             $cat = $info['data'];
             $score = $cat['score'] ?? $info['db_score'] ?? 0;
         @endphp

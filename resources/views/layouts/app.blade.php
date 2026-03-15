@@ -26,7 +26,9 @@
             {{-- Déconnexion via POST (sécurité CSRF) --}}
             <form method="POST" action="{{ route('logout') }}" style="display:inline">
                 @csrf
-                <button type="submit" class="nav-link btn-reset">Déconnexion</button>
+                <button type="submit" class="btn btn-sm btn-ghost" style="margin-left: -10px;">
+                    Déconnexion
+                </button>
             </form>
         @else
             <a href="{{ route('login') }}"    class="nav-link {{ request()->routeIs('login')    ? 'active' : '' }}">Connexion</a>

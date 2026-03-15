@@ -26,7 +26,9 @@
             
             <form method="POST" action="<?php echo e(route('logout')); ?>" style="display:inline">
                 <?php echo csrf_field(); ?>
-                <button type="submit" class="nav-link btn-reset">Déconnexion</button>
+                <button type="submit" class="btn btn-sm btn-ghost" style="margin-left: -10px;">
+                    Déconnexion
+                </button>
             </form>
         <?php else: ?>
             <a href="<?php echo e(route('login')); ?>"    class="nav-link <?php echo e(request()->routeIs('login')    ? 'active' : ''); ?>">Connexion</a>

@@ -14,34 +14,22 @@ use Illuminate\Support\Facades\Log;
 
 class AnalysisController extends Controller
 {
-    /**
-     * Injection des services via le constructeur
-     */
     public function __construct(
         private AiAnalysisService $aiService,
         private PdfTextExtractor  $pdfExtractor,
     ) {}
 
-    /**
-     * Dashboard : Liste des analyses
-     */
     public function index()
     {
         $analyses = Auth::user()->analyses()->latest()->get();
         return view('dashboard', compact('analyses'));
     }
 
-    /**
-     * Formulaire d'upload
-     */
     public function create()
     {
         return view('analysis.create');
     }
 
-    /**
-     * Traite l'analyse (Refactored for Clean Code)
-     */
     public function store(Request $request)
     {
         set_time_limit(120);
@@ -59,7 +47,7 @@ class AnalysisController extends Controller
         $errorMessage = null;
 
         try {
-            // 1. Extraction et Validation du texte
+            // 1. Extraction du texte
             $cvText = $this->pdfExtractor->extract($fullPath);
             
             if (strlen(trim($cvText)) < 100) {
@@ -77,26 +65,34 @@ class AnalysisController extends Controller
                 throw new AiServiceException('Erreur IA : ' . $result['error']);
             }
 
-            // 3. Sauvegarde Database
+            $fb = $result['feedback'];
+
+            // 3. Sauvegarde Database (MAJ avec scores individuels pour le dashboard)
             $analysis = Auth::user()->analyses()->create([
                 'job_title'        => $validated['job_title'],
                 'company_name'     => $validated['company_name'] ?? 'Inconnue',
                 'job_description'  => $validated['job_description'],
                 'years_experience' => $validated['years_experience'],
                 'cv_filename'      => $filename,
-                'overall_score'    => (int) ($result['feedback']['overallScore'] ?? 0),
-                'ai_feedback_json' => $result['feedback'],
+                'overall_score'    => (int) ($fb['overallScore'] ?? 0),
+                
+                // On mappe le JSON vers les colonnes SQL pour corriger le dashboard
+                'score_ats'        => (int) ($fb['ATS']['score'] ?? 0),
+                'score_tone'       => (int) ($fb['toneAndStyle']['score'] ?? 0),
+                'score_content'    => (int) ($fb['content']['score'] ?? 0),
+                'score_structure'  => (int) ($fb['structure']['score'] ?? 0),
+                'score_skills'     => (int) ($fb['skills']['score'] ?? 0),
+                
+                'ai_feedback_json' => $fb,
             ]);
 
         } catch (InvalidCvContentException | AiServiceException $e) {
-            // Utilisation de $e pour le log (Variable utilisée !)
             Log::warning('Échec métier de l\'analyse', ['message' => $e->getMessage()]);
             Storage::disk('public')->delete($filename);
             $errorMessage = $e->getMessage();
 
         } catch (\Exception $e) {
-            // Catch des erreurs système imprévues
-            Log::error('Erreur système critique', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Erreur système critique', ['error' => $e->getMessage()]);
             Storage::disk('public')->delete($filename);
             $errorMessage = "Une erreur technique est survenue.";
         }
@@ -106,9 +102,6 @@ class AnalysisController extends Controller
             : redirect()->route('analysis.show', $analysis->id)->with('success', 'Analyse terminée !');
     }
 
-    /**
-     * Détails d'une analyse (Sécurisé par user_id)
-     */
     public function show(int $id)
     {
         $analysis = CvAnalysis::where('id', $id)
@@ -118,9 +111,6 @@ class AnalysisController extends Controller
         return view('analysis.show', compact('analysis'));
     }
 
-    /**
-     * Suppression (Sécurisée avec Try/Catch)
-     */
     public function destroy(int $id)
     {
         $analysis = CvAnalysis::where('id', $id)
@@ -131,11 +121,8 @@ class AnalysisController extends Controller
             if (Storage::disk('public')->exists($analysis->cv_filename)) {
                 Storage::disk('public')->delete($analysis->cv_filename);
             }
-
             $analysis->delete();
-
             return redirect()->route('dashboard')->with('success', 'Analyse supprimée.');
-            
         } catch (\Exception $e) {
             Log::error('Erreur suppression', ['id' => $id, 'error' => $e->getMessage()]);
             return back()->with('error', 'Impossible de supprimer cette analyse.');
