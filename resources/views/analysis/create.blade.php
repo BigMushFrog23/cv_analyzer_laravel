@@ -65,7 +65,9 @@
                 <div class="file-preview" id="filePreview" style="display:none">
                     <span class="file-icon">📄</span>
                     <span id="fileName"></span>
-                    <span class="file-remove" onclick="clearFile()">✕</span>
+                    <button type="button" class="file-remove" onclick="clearFile()" aria-label="Remove file">
+                        ✕
+                    </button>
                 </div>
             </div>
         </div>
