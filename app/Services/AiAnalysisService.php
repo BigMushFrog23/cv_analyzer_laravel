@@ -54,8 +54,8 @@ class AiAnalysisService
 
     private function buildPrompt(string $cvText, string $jobTitle, string $jobDescription): string
     {
-        return "Tu es un moteur d'audit ATS configuré sur un mode de précision binaire. 
-        Analyse le CV pour le poste de '$jobTitle' en suivant cette matrice de 100 points. 
+        return "Tu es un moteur d'audit ATS configuré sur un mode de précision binaire.
+        Analyse le CV pour le poste de '$jobTitle' en suivant cette matrice de 100 points.
         Pour chaque point, c'est 0 ou le maximum, pas d'entre-deux.
 
         --- I. IDENTITÉ & ACCESSIBILITÉ (10 pts) ---

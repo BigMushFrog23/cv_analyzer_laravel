@@ -44,6 +44,8 @@ class AnalysisController extends Controller
      */
     public function store(Request $request)
     {
+        set_time_limit(120);
+        
         $validated = $request->validate([
             'job_title'        => ['required', 'string', 'max:200'],
             'company_name'     => ['nullable', 'string', 'max:200'],
