@@ -3,20 +3,36 @@
 
 @section('content')
 @php
-    $feedback = $analysis->ai_feedback_json; // déjà décodé grâce au cast 'array'
+    $feedback = $analysis->ai_feedback_json; // Cast array via le Model CvAnalysis
+    
+    // On définit les sections en faisant correspondre les clés JSON aux labels
+    // On s'assure de récupérer le score depuis le JSON ou la DB en secours
     $sections = [
-        'ATS'          => ['🤖 ATS & Mots-clés',   $feedback['ATS']          ?? []],
-        'toneAndStyle' => ['✍️  Ton & Style',        $feedback['toneAndStyle'] ?? []],
-        'content'      => ['📝 Contenu',             $feedback['content']      ?? []],
-        'structure'    => ['🏗️  Structure',           $feedback['structure']    ?? []],
-        'skills'       => ['💡 Compétences',          $feedback['skills']       ?? []],
-    ];
-    $scoreCols = [
-        'score_ats'       => 'ATS / Mots-clés',
-        'score_tone'      => 'Ton & Style',
-        'score_content'   => 'Contenu',
-        'score_structure' => 'Structure',
-        'score_skills'    => 'Compétences',
+        'ATS'          => [
+            'label' => '🤖 ATS & Mots-clés',
+            'data'  => $feedback['ATS'] ?? [],
+            'db_score' => $analysis->score_ats
+        ],
+        'toneAndStyle' => [
+            'label' => '✍️ Ton & Style',
+            'data'  => $feedback['toneAndStyle'] ?? [],
+            'db_score' => $analysis->score_tone
+        ],
+        'content'      => [
+            'label' => '📝 Contenu',
+            'data'  => $feedback['content'] ?? [],
+            'db_score' => $analysis->score_content
+        ],
+        'structure'    => [
+            'label' => '🏗️ Structure',
+            'data'  => $feedback['structure'] ?? [],
+            'db_score' => $analysis->score_structure
+        ],
+        'skills'       => [
+            'label' => '💡 Compétences',
+            'data'  => $feedback['skills'] ?? [],
+            'db_score' => $analysis->score_skills
+        ],
     ];
 @endphp
 
@@ -48,8 +64,11 @@
             </p>
         </div>
 
-        @php $dash = round(314 * $analysis->overall_score / 100); @endphp
-        <div class="overall-score-circle {{ $analysis->score_color }}">
+        @php 
+            $overall = $feedback['overallScore'] ?? $analysis->overall_score;
+            $dash = round(314 * $overall / 100); 
+        @endphp
+        <div class="overall-score-circle {{ \App\Models\CvAnalysis::colorFor($overall) }}">
             <svg viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="50" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
                 <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" stroke-width="10"
@@ -57,7 +76,7 @@
                     stroke-linecap="round" transform="rotate(-90 60 60)"/>
             </svg>
             <div class="score-center">
-                <span class="score-num">{{ $analysis->overall_score }}</span>
+                <span class="score-num">{{ $overall }}</span>
                 <small>/100</small>
             </div>
         </div>
@@ -71,21 +90,24 @@
     </div>
     @endif
 
-    {{-- Scores par catégorie --}}
+    {{-- Scores par catégorie (Barres horizontales) --}}
     <div class="scores-overview">
-        @foreach ($scoreCols as $col => $label)
-        @php $score = $analysis->$col; @endphp
-        <div class="score-overview-item {{ \App\Models\CvAnalysis::colorFor($score) }}"
-             data-target="#section-{{ $loop->index }}">
+        @foreach ($sections as $key => $info)
+        @php 
+            // On prend le score du JSON en priorité, sinon celui de la DB
+            $currentScore = $info['data']['score'] ?? $info['db_score'] ?? 0;
+            $color = \App\Models\CvAnalysis::colorFor($currentScore);
+        @endphp
+        <div class="score-overview-item {{ $color }}" style="cursor: pointer;">
             <div class="soi-bar-wrap">
-                <div class="soi-bar-fill" style="width:{{ $score }}%"></div>
+                <div class="soi-bar-fill" style="width:{{ $currentScore }}%"></div>
             </div>
             <div class="soi-info">
-                <span class="soi-label">{{ $label }}</span>
+                <span class="soi-label">{{ $info['label'] }}</span>
                 <span class="soi-score">
-                    {{ $score }} —
-                    @if($score >= 75) Excellent
-                    @elseif($score >= 50) Correct
+                    {{ $currentScore }} —
+                    @if($currentScore >= 75) Excellent
+                    @elseif($currentScore >= 50) Correct
                     @else À améliorer
                     @endif
                 </span>
@@ -94,39 +116,46 @@
         @endforeach
     </div>
 
-    {{-- Sections détaillées --}}
+    {{-- Sections détaillées (Tips) --}}
     <div class="feedback-sections">
-        @foreach ($sections as $key => [$title, $cat])
-        @if (!empty($cat))
-        @php $score = $cat['score'] ?? 0; @endphp
-        <div class="feedback-section" id="section-{{ $loop->index }}">
+        @foreach ($sections as $key => $info)
+        @php 
+            $cat = $info['data'];
+            $score = $cat['score'] ?? $info['db_score'] ?? 0;
+        @endphp
+        <div class="feedback-section">
             <div class="fs-header">
-                <h2>{{ $title }}</h2>
+                <h2>{{ $info['label'] }}</h2>
                 <span class="fs-score badge-{{ \App\Models\CvAnalysis::colorFor($score) }}">
                     {{ $score }}/100
                 </span>
             </div>
             <div class="tips-list">
-                @foreach ($cat['tips'] ?? [] as $tip)
-                <div class="tip-item tip-{{ $tip['type'] }}">
-                    <div class="tip-icon">{{ $tip['type'] === 'good' ? '✓' : '↑' }}</div>
+                @forelse ($cat['tips'] ?? [] as $tip)
+                <div class="tip-item tip-{{ $tip['type'] ?? 'improve' }}">
+                    <div class="tip-icon">{{ ($tip['type'] ?? '') === 'good' ? '✓' : '↑' }}</div>
                     <div class="tip-body">
-                        <strong>{{ $tip['tip'] }}</strong>
+                        <strong>{{ $tip['tip'] ?? 'Analyse en cours...' }}</strong>
                         @if (!empty($tip['explanation']))
                             <p>{{ $tip['explanation'] }}</p>
                         @endif
                     </div>
                 </div>
-                @endforeach
+                @empty
+                <div class="tip-item">
+                    <div class="tip-body">
+                        <p class="text-muted">Aucun conseil spécifique généré pour cette section.</p>
+                    </div>
+                </div>
+                @endforelse
             </div>
         </div>
-        @endif
         @endforeach
     </div>
 
     <div class="result-footer-actions">
         <a href="{{ route('analysis.create') }}" class="btn btn-primary">Analyser un autre CV</a>
-        <a href="{{ route('dashboard') }}"        class="btn btn-outline">Tableau de bord</a>
+        <a href="{{ route('dashboard') }}" class="btn btn-outline">Tableau de bord</a>
     </div>
 </div>
 @endsection

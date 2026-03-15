@@ -1352,3 +1352,12 @@ Please retry in 28.321583958s."}
 #56 C:/Program Files/Herd/resources/app.asar.unpacked/resources/valet/server.php(139): require('C://xampp//htdocs...')
 #57 {main}
 "} 
+[2026-03-15 21:41:53] local.ERROR: Gemini API Error {"body":"{
+  \"error\": {
+    \"code\": 404,
+    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",
+    \"status\": \"NOT_FOUND\"
+  }
+}
+"} 
+[2026-03-15 21:41:53] local.WARNING: Échec métier de l'analyse {"message":"Erreur IA : API Error: models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods."} 
