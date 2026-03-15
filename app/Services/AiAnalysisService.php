@@ -25,7 +25,7 @@ class AiAnalysisService
         $prompt = $this->buildPrompt($cvText, $jobTitle, $jobDescription);
 
         try {
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" . $this->apiKey;
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $this->apiKey;
 
             $response = Http::timeout(60)
                 ->withoutVerifying()

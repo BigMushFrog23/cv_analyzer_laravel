@@ -1049,3 +1049,126 @@
 #27 C:/xampp/htdocs/cv_analyzer_laravel/artisan(17): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
 #28 {main}
 "} 
+[2026-03-15 21:22:35] local.ERROR: Gemini API Error {"body":"{
+  \"error\": {
+    \"code\": 429,
+    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\\nPlease retry in 24.832601528s.\",
+    \"status\": \"RESOURCE_EXHAUSTED\",
+    \"details\": [
+      {
+        \"@type\": \"type.googleapis.com/google.rpc.Help\",
+        \"links\": [
+          {
+            \"description\": \"Learn more about Gemini API quotas\",
+            \"url\": \"https://ai.google.dev/gemini-api/docs/rate-limits\"
+          }
+        ]
+      },
+      {
+        \"@type\": \"type.googleapis.com/google.rpc.QuotaFailure\",
+        \"violations\": [
+          {
+            \"quotaMetric\": \"generativelanguage.googleapis.com/generate_content_free_tier_requests\",
+            \"quotaId\": \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",
+            \"quotaDimensions\": {
+              \"location\": \"global\",
+              \"model\": \"gemini-2.0-flash\"
+            }
+          },
+          {
+            \"quotaMetric\": \"generativelanguage.googleapis.com/generate_content_free_tier_requests\",
+            \"quotaId\": \"GenerateRequestsPerMinutePerProjectPerModel-FreeTier\",
+            \"quotaDimensions\": {
+              \"location\": \"global\",
+              \"model\": \"gemini-2.0-flash\"
+            }
+          },
+          {
+            \"quotaMetric\": \"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count\",
+            \"quotaId\": \"GenerateContentInputTokensPerModelPerMinute-FreeTier\",
+            \"quotaDimensions\": {
+              \"location\": \"global\",
+              \"model\": \"gemini-2.0-flash\"
+            }
+          }
+        ]
+      },
+      {
+        \"@type\": \"type.googleapis.com/google.rpc.RetryInfo\",
+        \"retryDelay\": \"24s\"
+      }
+    ]
+  }
+}
+"} 
+[2026-03-15 21:22:35] local.WARNING: Échec métier de l'analyse {"message":"Erreur IA : API Error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+Please retry in 24.832601528s."} 
+[2026-03-15 21:24:31] local.ERROR: Gemini API Error {"body":"{
+  \"error\": {
+    \"code\": 429,
+    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\nPlease retry in 28.321583958s.\",
+    \"status\": \"RESOURCE_EXHAUSTED\",
+    \"details\": [
+      {
+        \"@type\": \"type.googleapis.com/google.rpc.Help\",
+        \"links\": [
+          {
+            \"description\": \"Learn more about Gemini API quotas\",
+            \"url\": \"https://ai.google.dev/gemini-api/docs/rate-limits\"
+          }
+        ]
+      },
+      {
+        \"@type\": \"type.googleapis.com/google.rpc.QuotaFailure\",
+        \"violations\": [
+          {
+            \"quotaMetric\": \"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count\",
+            \"quotaId\": \"GenerateContentInputTokensPerModelPerMinute-FreeTier\",
+            \"quotaDimensions\": {
+              \"model\": \"gemini-2.0-flash\",
+              \"location\": \"global\"
+            }
+          },
+          {
+            \"quotaMetric\": \"generativelanguage.googleapis.com/generate_content_free_tier_requests\",
+            \"quotaId\": \"GenerateRequestsPerMinutePerProjectPerModel-FreeTier\",
+            \"quotaDimensions\": {
+              \"location\": \"global\",
+              \"model\": \"gemini-2.0-flash\"
+            }
+          },
+          {
+            \"quotaMetric\": \"generativelanguage.googleapis.com/generate_content_free_tier_requests\",
+            \"quotaId\": \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\",
+            \"quotaDimensions\": {
+              \"location\": \"global\",
+              \"model\": \"gemini-2.0-flash\"
+            }
+          }
+        ]
+      },
+      {
+        \"@type\": \"type.googleapis.com/google.rpc.RetryInfo\",
+        \"retryDelay\": \"28s\"
+      }
+    ]
+  }
+}
+"} 
+[2026-03-15 21:24:31] local.WARNING: Échec métier de l'analyse {"message":"Erreur IA : API Error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
+Please retry in 28.321583958s."} 
+[2026-03-15 21:30:24] local.ERROR: Gemini API Error {"body":"{
+  \"error\": {
+    \"code\": 404,
+    \"message\": \"This model models/gemini-2.0-flash is no longer available to new users. Please update your code to use a newer model for the latest features and improvements.\",
+    \"status\": \"NOT_FOUND\"
+  }
+}
+"} 
+[2026-03-15 21:30:24] local.WARNING: Échec métier de l'analyse {"message":"Erreur IA : API Error: This model models/gemini-2.0-flash is no longer available to new users. Please update your code to use a newer model for the latest features and improvements."} 
