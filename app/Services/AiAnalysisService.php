@@ -11,24 +11,21 @@ class AiAnalysisService
 
     public function __construct()
     {
-        // Use the config helper instead of env()
-        $this->apiKey = config('services.gemini.key');
+        $this->apiKey = config('services.gemini.key') ?? '';
     }
 
     public function analyze(string $cvText, string $jobTitle, string $jobDescription): array
     {
-        // Initialize our single source of truth for the return
         $result = ['error' => 'Unknown error occurred'];
 
-        // 1. Guard Clause (Checking API Key)
         if (empty($this->apiKey)) {
-            return ['error' => 'API Key missing']; // Return #1
+            return ['error' => 'API Key missing'];
         }
 
         $prompt = $this->buildPrompt($cvText, $jobTitle, $jobDescription);
 
         try {
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $this->apiKey;
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" . $this->apiKey;
 
             $response = Http::timeout(60)
                 ->withoutVerifying()
@@ -36,6 +33,7 @@ class AiAnalysisService
                     'contents' => [['parts' => [['text' => $prompt]]]],
                     'generationConfig' => [
                         'response_mime_type' => 'application/json',
+                        'temperature' => 0.1, // Pour la stabilité maximale
                     ]
                 ]);
 
@@ -44,19 +42,14 @@ class AiAnalysisService
                 $result = ['error' => 'API Error: ' . ($response->json('error.message') ?? 'Unknown')];
             } else {
                 $text = $response->json('candidates.0.content.parts.0.text', '');
-
-                if (empty($text)) {
-                    $result = ['error' => 'Empty response from AI.'];
-                } else {
-                    $feedback = $this->parseJsonResponse($text);
-                    $result = $feedback ? ['feedback' => $feedback] : ['error' => 'Invalid JSON from AI.'];
-                }
+                $feedback = $this->parseJsonResponse($text);
+                $result = $feedback ? ['feedback' => $feedback] : ['error' => 'Invalid JSON from AI.'];
             }
         } catch (\Exception $e) {
             $result = ['error' => 'System Error: ' . $e->getMessage()];
         }
 
-        return $result; // Return #2
+        return $result;
     }
 
     private function buildPrompt(string $cvText, string $jobTitle, string $jobDescription): string
@@ -112,18 +105,16 @@ class AiAnalysisService
         CV : {$cvText}
 
         --- CONSIGNE DE SORTIE ---
-        Réalise le calcul interne de chaque point. Le 'overallScore' doit être la somme mathématique exacte.
-        Retourne UNIQUEMENT ce JSON :
+        Réalise le calcul interne rigoureux de chaque point. Le 'overallScore' doit être la somme mathématique exacte.
+        Tu DOIS retourner UNIQUEMENT ce format JSON pour que l'interface s'affiche correctement :
         {
-        \"overallScore\": 0,
-        \"details\": {
-            \"identite\": 0, \"keywords\": 0, \"experience\": 0, \"quantitatif\": 0, \"formation\": 0, \"formatage\": 0
-        },
-        \"feedback\": {
-            \"overallScore\": 0,
-            \"ATS\": { \"score\": 0, \"tips\": [] },
-            \"summary\": \"...\"
-        }
+          \"overallScore\": 0,
+          \"ATS\": { \"score\": 0, \"tips\": [] },
+          \"toneAndStyle\": { \"score\": 0, \"tips\": [] },
+          \"content\": { \"score\": 0, \"tips\": [] },
+          \"structure\": { \"score\": 0, \"tips\": [] },
+          \"skills\": { \"score\": 0, \"tips\": [] },
+          \"summary\": \"Ton résumé global ici...\"
         }";
     }
 
