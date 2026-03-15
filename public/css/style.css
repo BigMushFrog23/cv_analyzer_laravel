@@ -150,10 +150,11 @@ input, textarea, select {
 
 /* ── Updated Primary Button for High Contrast ── */
 .btn-primary {
-  background: linear-gradient(135deg, #7c6bff, #5b4be6);
-  color: #ffffff !important; /* Ensure white is forced */
-  box-shadow: 0 0 20px var(--accent-glow);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Improves legibility */
+    /* We use a deeper Indigo-Purple to make the white text "legal" */
+    background: linear-gradient(135deg, #5a4cf5, #4338ca) !important;
+    color: #ffffff !important; 
+    box-shadow: 0 4px 15px rgba(90, 76, 245, 0.3);
+    border: none;
 }
 
 .btn-primary:hover {
