@@ -3,37 +3,58 @@
 
 @section('content')
 @php
-    $feedback = $analysis->ai_feedback_json; // Cast array via le Model CvAnalysis
+    $feedback = $analysis->ai_feedback_json ?? [];
     
-    // On définit les sections en faisant correspondre les clés JSON aux labels
-    // On s'assure de récupérer le score depuis le JSON ou la DB en secours
+    $getCategoryData = function($key) use ($feedback, $analysis) {
+        // Liste de synonymes par catégorie pour parer aux variations de l'IA
+        $mapping = [
+            'ATS'          => ['ATS', 'ats', 'keywords', 'mots_cles', 'Keywords'],
+            'toneAndStyle' => ['toneAndStyle', 'style', 'ton', 'tonalite', 'tonAndStyle', 'presentation'],
+            'content'      => ['content', 'contenu', 'Contenu', 'details'],
+            'structure'    => ['structure', 'Structure', 'mise_en_page', 'layout'],
+            'skills'       => ['skills', 'competences', 'Skills', 'Competences', 'capacites'],
+        ];
+
+        $variants = $mapping[$key] ?? [$key];
+
+        // 1. On cherche dans le JSON parmi tous les synonymes
+        foreach ($variants as $v) {
+            if (isset($feedback[$v])) {
+                if (is_array($feedback[$v])) {
+                    return [
+                        'score' => $feedback[$v]['score'] ?? 0,
+                        'tips'  => $feedback[$v]['tips'] ?? []
+                    ];
+                }
+                if (is_numeric($feedback[$v])) {
+                    return ['score' => (int)$feedback[$v], 'tips' => []];
+                }
+            }
+        }
+
+        // 2. Si rien trouvé dans le JSON, on force la valeur de la DB
+        $db_map = [
+            'ATS'          => $analysis->score_ats,
+            'toneAndStyle' => $analysis->score_tone,
+            'content'      => $analysis->score_content,
+            'structure'    => $analysis->score_structure,
+            'skills'       => $analysis->score_skills,
+        ];
+        
+        return ['score' => $db_map[$key] ?? 0, 'tips' => []];
+    };
+
+    // Construction de l'objet final utilisé par la vue
     $sections = [
-        'ATS'          => [
-            'label' => '🤖 ATS & Mots-clés',
-            'data'  => $feedback['ATS'] ?? [],
-            'db_score' => $analysis->score_ats
-        ],
-        'toneAndStyle' => [
-            'label' => '✍️ Ton & Style',
-            'data'  => $feedback['toneAndStyle'] ?? [],
-            'db_score' => $analysis->score_tone
-        ],
-        'content'      => [
-            'label' => '📝 Contenu',
-            'data'  => $feedback['content'] ?? [],
-            'db_score' => $analysis->score_content
-        ],
-        'structure'    => [
-            'label' => '🏗️ Structure',
-            'data'  => $feedback['structure'] ?? [],
-            'db_score' => $analysis->score_structure
-        ],
-        'skills'       => [
-            'label' => '💡 Compétences',
-            'data'  => $feedback['skills'] ?? [],
-            'db_score' => $analysis->score_skills
-        ],
+        'ATS'          => array_merge(['label' => '🤖 ATS & Mots-clés'], $getCategoryData('ATS')),
+        'toneAndStyle' => array_merge(['label' => '✍️ Ton & Style'],      $getCategoryData('toneAndStyle')),
+        'content'      => array_merge(['label' => '📝 Contenu'],           $getCategoryData('content')),
+        'structure'    => array_merge(['label' => '🏗️ Structure'],         $getCategoryData('structure')),
+        'skills'       => array_merge(['label' => '💡 Compétences'],       $getCategoryData('skills')),
     ];
+
+    $overall = $feedback['overallScore'] ?? $analysis->overall_score;
+    $dash = round(314 * $overall / 100);
 @endphp
 
 <div class="result-container">
@@ -64,10 +85,6 @@
             </p>
         </div>
 
-        @php
-            $overall = $feedback['overallScore'] ?? $analysis->overall_score;
-            $dash = round(314 * $overall / 100);
-        @endphp
         <div class="overall-score-circle {{ \App\Models\CvAnalysis::colorFor($overall) }}">
             <svg viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="50" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
@@ -92,22 +109,18 @@
 
     {{-- Scores par catégorie (Barres horizontales) --}}
     <div class="scores-overview">
-        @foreach ($sections as $key => $info)
-        @php
-            // On prend le score du JSON en priorité, sinon celui de la DB
-            $currentScore = $info['data']['score'] ?? $info['db_score'] ?? 0;
-            $color = \App\Models\CvAnalysis::colorFor($currentScore);
-        @endphp
-        <div class="score-overview-item {{ $color }}" style="cursor: pointer;">
+        @foreach ($sections as $key => $section)
+        @php $color = \App\Models\CvAnalysis::colorFor($section['score']); @endphp
+        <div class="score-overview-item {{ $color }}">
             <div class="soi-bar-wrap">
-                <div class="soi-bar-fill" style="width:{{ $currentScore }}%"></div>
+                <div class="soi-bar-fill" style="width:{{ $section['score'] }}%"></div>
             </div>
             <div class="soi-info">
-                <span class="soi-label">{{ $info['label'] }}</span>
+                <span class="soi-label">{{ $section['label'] }}</span>
                 <span class="soi-score">
-                    {{ $currentScore }} —
-                    @if($currentScore >= 75) Excellent
-                    @elseif($currentScore >= 50) Correct
+                    {{ $section['score'] }} — 
+                    @if($section['score'] >= 75) Excellent
+                    @elseif($section['score'] >= 50) Correct
                     @else À améliorer
                     @endif
                 </span>
@@ -118,24 +131,20 @@
 
     {{-- Sections détaillées (Tips) --}}
     <div class="feedback-sections">
-        @foreach ($sections as $key => $info)
-        @php
-            $cat = $info['data'];
-            $score = $cat['score'] ?? $info['db_score'] ?? 0;
-        @endphp
+        @foreach ($sections as $key => $section)
         <div class="feedback-section">
             <div class="fs-header">
-                <h2>{{ $info['label'] }}</h2>
-                <span class="fs-score badge-{{ \App\Models\CvAnalysis::colorFor($score) }}">
-                    {{ $score }}/100
+                <h2>{{ $section['label'] }}</h2>
+                <span class="fs-score badge-{{ \App\Models\CvAnalysis::colorFor($section['score']) }}">
+                    {{ $section['score'] }}/100
                 </span>
             </div>
             <div class="tips-list">
-                @forelse ($cat['tips'] ?? [] as $tip)
+                @forelse ($section['tips'] as $tip)
                 <div class="tip-item tip-{{ $tip['type'] ?? 'improve' }}">
                     <div class="tip-icon">{{ ($tip['type'] ?? '') === 'good' ? '✓' : '↑' }}</div>
                     <div class="tip-body">
-                        <strong>{{ $tip['tip'] ?? 'Analyse en cours...' }}</strong>
+                        <strong>{{ $tip['tip'] ?? 'Conseil IA' }}</strong>
                         @if (!empty($tip['explanation']))
                             <p>{{ $tip['explanation'] }}</p>
                         @endif

@@ -2,37 +2,58 @@
 
 <?php $__env->startSection('content'); ?>
 <?php
-    $feedback = $analysis->ai_feedback_json; // Cast array via le Model CvAnalysis
+    $feedback = $analysis->ai_feedback_json ?? [];
     
-    // On définit les sections en faisant correspondre les clés JSON aux labels
-    // On s'assure de récupérer le score depuis le JSON ou la DB en secours
+    $getCategoryData = function($key) use ($feedback, $analysis) {
+        // Liste de synonymes par catégorie pour parer aux variations de l'IA
+        $mapping = [
+            'ATS'          => ['ATS', 'ats', 'keywords', 'mots_cles', 'Keywords'],
+            'toneAndStyle' => ['toneAndStyle', 'style', 'ton', 'tonalite', 'tonAndStyle', 'presentation'],
+            'content'      => ['content', 'contenu', 'Contenu', 'details'],
+            'structure'    => ['structure', 'Structure', 'mise_en_page', 'layout'],
+            'skills'       => ['skills', 'competences', 'Skills', 'Competences', 'capacites'],
+        ];
+
+        $variants = $mapping[$key] ?? [$key];
+
+        // 1. On cherche dans le JSON parmi tous les synonymes
+        foreach ($variants as $v) {
+            if (isset($feedback[$v])) {
+                if (is_array($feedback[$v])) {
+                    return [
+                        'score' => $feedback[$v]['score'] ?? 0,
+                        'tips'  => $feedback[$v]['tips'] ?? []
+                    ];
+                }
+                if (is_numeric($feedback[$v])) {
+                    return ['score' => (int)$feedback[$v], 'tips' => []];
+                }
+            }
+        }
+
+        // 2. Si rien trouvé dans le JSON, on force la valeur de la DB
+        $db_map = [
+            'ATS'          => $analysis->score_ats,
+            'toneAndStyle' => $analysis->score_tone,
+            'content'      => $analysis->score_content,
+            'structure'    => $analysis->score_structure,
+            'skills'       => $analysis->score_skills,
+        ];
+        
+        return ['score' => $db_map[$key] ?? 0, 'tips' => []];
+    };
+
+    // Construction de l'objet final utilisé par la vue
     $sections = [
-        'ATS'          => [
-            'label' => '🤖 ATS & Mots-clés',
-            'data'  => $feedback['ATS'] ?? [],
-            'db_score' => $analysis->score_ats
-        ],
-        'toneAndStyle' => [
-            'label' => '✍️ Ton & Style',
-            'data'  => $feedback['toneAndStyle'] ?? [],
-            'db_score' => $analysis->score_tone
-        ],
-        'content'      => [
-            'label' => '📝 Contenu',
-            'data'  => $feedback['content'] ?? [],
-            'db_score' => $analysis->score_content
-        ],
-        'structure'    => [
-            'label' => '🏗️ Structure',
-            'data'  => $feedback['structure'] ?? [],
-            'db_score' => $analysis->score_structure
-        ],
-        'skills'       => [
-            'label' => '💡 Compétences',
-            'data'  => $feedback['skills'] ?? [],
-            'db_score' => $analysis->score_skills
-        ],
+        'ATS'          => array_merge(['label' => '🤖 ATS & Mots-clés'], $getCategoryData('ATS')),
+        'toneAndStyle' => array_merge(['label' => '✍️ Ton & Style'],      $getCategoryData('toneAndStyle')),
+        'content'      => array_merge(['label' => '📝 Contenu'],           $getCategoryData('content')),
+        'structure'    => array_merge(['label' => '🏗️ Structure'],         $getCategoryData('structure')),
+        'skills'       => array_merge(['label' => '💡 Compétences'],       $getCategoryData('skills')),
     ];
+
+    $overall = $feedback['overallScore'] ?? $analysis->overall_score;
+    $dash = round(314 * $overall / 100);
 ?>
 
 <div class="result-container">
@@ -64,10 +85,6 @@
             </p>
         </div>
 
-        <?php
-            $overall = $feedback['overallScore'] ?? $analysis->overall_score;
-            $dash = round(314 * $overall / 100);
-        ?>
         <div class="overall-score-circle <?php echo e(\App\Models\CvAnalysis::colorFor($overall)); ?>">
             <svg viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="50" fill="none" stroke="var(--surface-2)" stroke-width="10"/>
@@ -92,22 +109,18 @@
 
     
     <div class="scores-overview">
-        <?php $__currentLoopData = $sections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $info): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-        <?php
-            // On prend le score du JSON en priorité, sinon celui de la DB
-            $currentScore = $info['data']['score'] ?? $info['db_score'] ?? 0;
-            $color = \App\Models\CvAnalysis::colorFor($currentScore);
-        ?>
-        <div class="score-overview-item <?php echo e($color); ?>" style="cursor: pointer;">
+        <?php $__currentLoopData = $sections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $section): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php $color = \App\Models\CvAnalysis::colorFor($section['score']); ?>
+        <div class="score-overview-item <?php echo e($color); ?>">
             <div class="soi-bar-wrap">
-                <div class="soi-bar-fill" style="width:<?php echo e($currentScore); ?>%"></div>
+                <div class="soi-bar-fill" style="width:<?php echo e($section['score']); ?>%"></div>
             </div>
             <div class="soi-info">
-                <span class="soi-label"><?php echo e($info['label']); ?></span>
+                <span class="soi-label"><?php echo e($section['label']); ?></span>
                 <span class="soi-score">
-                    <?php echo e($currentScore); ?> —
-                    <?php if($currentScore >= 75): ?> Excellent
-                    <?php elseif($currentScore >= 50): ?> Correct
+                    <?php echo e($section['score']); ?> — 
+                    <?php if($section['score'] >= 75): ?> Excellent
+                    <?php elseif($section['score'] >= 50): ?> Correct
                     <?php else: ?> À améliorer
                     <?php endif; ?>
                 </span>
@@ -118,24 +131,20 @@
 
     
     <div class="feedback-sections">
-        <?php $__currentLoopData = $sections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $info): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-        <?php
-            $cat = $info['data'];
-            $score = $cat['score'] ?? $info['db_score'] ?? 0;
-        ?>
+        <?php $__currentLoopData = $sections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $section): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <div class="feedback-section">
             <div class="fs-header">
-                <h2><?php echo e($info['label']); ?></h2>
-                <span class="fs-score badge-<?php echo e(\App\Models\CvAnalysis::colorFor($score)); ?>">
-                    <?php echo e($score); ?>/100
+                <h2><?php echo e($section['label']); ?></h2>
+                <span class="fs-score badge-<?php echo e(\App\Models\CvAnalysis::colorFor($section['score'])); ?>">
+                    <?php echo e($section['score']); ?>/100
                 </span>
             </div>
             <div class="tips-list">
-                <?php $__empty_1 = true; $__currentLoopData = $cat['tips'] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tip): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php $__empty_1 = true; $__currentLoopData = $section['tips']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tip): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <div class="tip-item tip-<?php echo e($tip['type'] ?? 'improve'); ?>">
                     <div class="tip-icon"><?php echo e(($tip['type'] ?? '') === 'good' ? '✓' : '↑'); ?></div>
                     <div class="tip-body">
-                        <strong><?php echo e($tip['tip'] ?? 'Analyse en cours...'); ?></strong>
+                        <strong><?php echo e($tip['tip'] ?? 'Conseil IA'); ?></strong>
                         <?php if(!empty($tip['explanation'])): ?>
                             <p><?php echo e($tip['explanation']); ?></p>
                         <?php endif; ?>

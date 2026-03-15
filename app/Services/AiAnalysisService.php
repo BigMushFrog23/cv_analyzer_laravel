@@ -116,7 +116,7 @@ class AiAnalysisService
         {
           \"overallScore\": 0,
           \"ATS\": { \"score\": 0, \"tips\": [{\"type\": \"improve\", \"tip\": \"Ajoutez des mots-clés\"}] },
-          \"toneAndStyle\": { \"score\": 0, \"tips\": [] },
+          \"toneAndStyle\": { \"score\": 0, \"tips\": [] }
           \"content\": { \"score\": 0, \"tips\": [] },
           \"structure\": { \"score\": 0, \"tips\": [] },
           \"skills\": { \"score\": 0, \"tips\": [] },
