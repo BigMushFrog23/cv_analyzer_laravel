@@ -30,6 +30,20 @@ class AnalysisController extends Controller
         return view('analysis.create');
     }
 
+    public function edit($id)
+    {
+        // 1. Récupérer l'analyse via Eloquent
+        $analysis = CvAnalysis::findOrFail($id);
+
+        // 2. Vérifier l'habilitation (sécurité)
+        if ($analysis->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // 3. Retourner la vue avec les données
+        return view('analysis.edit', compact('analysis'));
+    }
+
     public function store(Request $request)
     {
         set_time_limit(120);
