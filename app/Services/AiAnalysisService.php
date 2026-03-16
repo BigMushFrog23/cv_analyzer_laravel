@@ -58,70 +58,26 @@ class AiAnalysisService
         return $result;
     }
 
-    private function buildPrompt(string $cvText, string $jobTitle, string $jobDescription): string
+   private function buildPrompt(string $cvText, string $jobTitle, string $jobDescription): string
     {
-        return "Tu es un moteur d'audit ATS configuré sur un mode de précision binaire.
-        Analyse le CV pour le poste de '$jobTitle' en suivant cette matrice de 100 points.
-        Pour chaque point, c'est 0 ou le maximum, pas d'entre-deux.
-
-        --- I. IDENTITÉ & ACCESSIBILITÉ (10 pts) ---
-        1. Nom/Prénom présents (1pt)
-        2. Numéro de téléphone valide (1pt)
-        3. Email professionnel (1pt)
-        4. Ville/Code Postal (1pt)
-        5. Lien LinkedIn ou Portfolio (2pts)
-        6. Titre du CV correspondant au métier (2pts)
-        7. Photo absente ou professionnelle (1pt)
-        8. Permis de conduire mentionné (si pertinent) (1pt)
-
-        --- II. OPTIMISATION MOTS-CLÉS (25 pts) ---
-        (Analyse l'OFFRE suivante : {$jobDescription})
-        - 5 Mots-clés techniques de l'offre trouvés : (2pts par mot, total 10pts)
-        - 5 Verbes d'action (Concevoir, Gérer, Analyser...) : (1pt par verbe, total 5pts)
-        - Présence des outils/logiciels cités dans l'offre : (10pts)
-
-        --- III. EXPÉRIENCE DÉTAILLÉE (25 pts) ---
-        - Durée totale d'expérience > demande de l'offre (5pts)
-        - Cohérence de la chronologie (pas de trou inexpliqué) (5pts)
-        - Entreprises nommées clairement (2pts)
-        - Missions détaillées pour chaque poste (5pts)
-        - Évolution des responsabilités au fil du temps (3pts)
-        - Alternance ou stages valorisés si débutant (5pts)
-
-        --- IV. ANALYSE QUANTITATIVE (20 pts) ---
-        - Présence de chiffres (ex: 20%, 50k€, 10 pers) : (5pts)
-        - Indicateurs de performance (KPI) mentionnés : (5pts)
-        - Dates de début/fin précises (Mois/Année) : (5pts)
-        - Description des technos par projet : (5pts)
-
-        --- V. FORMATION & COMPÉTENCES (10 pts) ---
-        - Diplôme le plus élevé cité (2pts)
-        - Nom de l'école/université présent (2pts)
-        - Section 'Compétences' (Hard Skills) isolée (2pts)
-        - Section 'Langues' avec niveau (A1, B2, C1...) (2pts)
-        - Section 'Soft Skills' ou 'Loisirs' pertinente (2pts)
-
-        --- VI. FORMATAGE TECHNIQUE (10 pts) ---
-        - Usage de listes à puces (3pts)
-        - Police lisible et uniforme (2pts)
-        - Pas de logos/graphiques bloquant l'extraction (2pts)
-        - Longueur optimale (1 à 2 pages max) (3pts)
-
-        --- DONNÉES DE TEST ---
-        CV : {$cvText}
-
-        --- CONSIGNE DE SORTIE ---
-        Réalise le calcul interne rigoureux de chaque point. Le 'overallScore' doit être la somme mathématique exacte.
-        Tu DOIS retourner UNIQUEMENT ce format JSON pour que l'interface s'affiche correctement :
+        return "Tu es un expert en recrutement spécialisé en systèmes ATS. 
+        Analyse ce CV par rapport à l'offre de '$jobTitle'. 
+        
+        Tu dois impérativement répondre au format JSON strict suivant, sans aucun texte avant ou après.
+        Chaque score est sur 100.
+        
         {
-          \"overallScore\": 0,
-          \"ATS\": { \"score\": 0, \"tips\": [{\"type\": \"improve\", \"tip\": \"Ajoutez des mots-clés\"}] },
-          \"toneAndStyle\": { \"score\": 0, \"tips\": [] }
-          \"content\": { \"score\": 0, \"tips\": [] },
-          \"structure\": { \"score\": 0, \"tips\": [] },
-          \"skills\": { \"score\": 0, \"tips\": [] },
-          \"summary\": \"Ton résumé global ici...\"
-        }";
+        \"overallScore\": 0,
+        \"ATS\": { \"score\": 0, \"tips\": [{\"type\": \"improve\", \"tip\": \"conseil\"}] },
+        \"toneAndStyle\": { \"score\": 0, \"tips\": [{\"type\": \"improve\", \"tip\": \"conseil\"}] },
+        \"content\": { \"score\": 0, \"tips\": [{\"type\": \"improve\", \"tip\": \"conseil\"}] },
+        \"structure\": { \"score\": 0, \"tips\": [{\"type\": \"improve\", \"tip\": \"conseil\"}] },
+        \"skills\": { \"score\": 0, \"tips\": [{\"type\": \"improve\", \"tip\": \"conseil\"}] },
+        \"summary\": \"Ton résumé global ici...\"
+        }
+
+        Offre : $jobDescription
+        CV à analyser : $cvText";
     }
 
     private function parseJsonResponse(string $text): ?array
