@@ -26,7 +26,6 @@ class AiAnalysisService
         $prompt = $this->buildPrompt($cvText, $jobTitle, $jobDescription);
 
         try {
-            // Modèle corrigé en 1.5-flash (le plus stable pour le free tier)
             $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $this->apiKey;
 
             // Timeout augmenté à 100s car le prompt est très long à traiter
