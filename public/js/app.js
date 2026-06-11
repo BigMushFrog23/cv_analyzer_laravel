@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnText)    btnText.style.display    = 'none';
       if (btnLoading) btnLoading.style.display = 'inline';
       submitBtn.disabled = true;
+      // Lancer le mini-jeu Snake pendant l'attente de l'analyse
+      if (typeof globalThis.startSnake === 'function') globalThis.startSnake();
     });
   }
   

@@ -76,6 +76,39 @@
             <span class="btn-text">✦ Analyser mon CV</span>
             <span class="btn-loading" style="display:none">⏳ Analyse en cours (30-60s)...</span>
         </button>
+
+        {{-- Mini-jeu Snake affiché pendant l'attente de l'analyse --}}
+        <div class="snake-wait" id="snakeWait" hidden>
+            <p class="snake-wait-title">⏳ Analyse en cours (30–60s)…<br>En attendant, joue à <strong>Snake</strong> !</p>
+            <canvas id="snakeCanvas" width="160" height="160" class="snake-canvas"></canvas>
+            <div class="snake-score">Score : <span id="snakeScore">0</span></div>
+            <p class="snake-controls">⬆ ⬇ ⬅ ➡ Flèches (ou Z Q S D) pour diriger · Espace pour rejouer</p>
+        </div>
     </form>
 </div>
+
+<style>
+    .snake-wait {
+        margin-top: 24px;
+        text-align: center;
+        padding: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+    }
+    .snake-wait-title { margin-bottom: 14px; font-weight: 600; line-height: 1.5; }
+    .snake-canvas {
+        image-rendering: pixelated;
+        width: 240px;
+        height: 240px;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        background: #0e1117;
+        touch-action: none;
+    }
+    .snake-score { margin-top: 12px; font-family: monospace; font-size: 1.1rem; }
+    .snake-controls { margin-top: 8px; font-size: 0.82rem; opacity: 0.7; }
+</style>
+
+<script src="{{ asset('js/snake.js') }}"></script>
 @endsection

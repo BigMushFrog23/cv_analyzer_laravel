@@ -22,6 +22,9 @@
             <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 Dashboard
             </a>
+            <a href="{{ route('account') }}" class="nav-link {{ request()->routeIs('account') ? 'active' : '' }}">
+                Mon compte
+            </a>
             <a href="{{ route('analysis.create') }}" class="btn btn-primary btn-sm">+ Analyser un CV</a>
             {{-- Déconnexion via POST (sécurité CSRF) --}}
             <form method="POST" action="{{ route('logout') }}" style="display:inline">

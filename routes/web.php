@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AnalysisController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 
 // ── Public ──
 Route::view('/', 'home')->name('home');
@@ -22,6 +23,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ── Mon compte ──
+    Route::get('/account', [ProfileController::class, 'edit'])->name('account');
+    Route::delete('/account', [ProfileController::class, 'destroy'])->name('account.destroy');
 
     // 1. Register the resource but EXCLUDE create and store to avoid the name conflict
     Route::resource('analysis', AnalysisController::class)->except(['index', 'create', 'store']);
